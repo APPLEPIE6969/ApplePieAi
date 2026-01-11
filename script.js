@@ -500,8 +500,20 @@ class AITrainer {
 
     initializeNetwork() {
         try {
-            const inputSize = parseInt(document.getElementById('inputSize').value);
-            const outputSize = parseInt(document.getElementById('outputSize').value);
+            const datasetType = document.getElementById('datasetType').value;
+            
+            // For chatbot models, use vocabulary and sequence length
+            let inputSize, outputSize;
+            
+            if (datasetType === 'chatbot' || datasetType === 'conversation') {
+                inputSize = parseInt(document.getElementById('maxSeqLength').value);
+                outputSize = parseInt(document.getElementById('maxSeqLength').value);
+                this.log(`🤖 Setting up chatbot network with sequence length: ${inputSize}`, 'info');
+            } else {
+                inputSize = parseInt(document.getElementById('inputSize').value);
+                outputSize = parseInt(document.getElementById('outputSize').value);
+            }
+            
             const hiddenLayerInputs = document.querySelectorAll('.layer-size');
             const activation = document.getElementById('activation').value;
             
@@ -516,9 +528,13 @@ class AITrainer {
             this.chartManager.reset();
             this.log(`✅ Network initialized: ${layers.join('-')} layers with ${activation} activation`, 'success');
             
-            // Load dataset
+            // Load dataset first
             this.loadDataset();
-            this.setupTestInputs();
+            
+            // Only setup test inputs for non-chatbot models
+            if (datasetType !== 'chatbot' && datasetType !== 'conversation') {
+                this.setupTestInputs();
+            }
             
             // Enable training button
             document.getElementById('trainBtn').disabled = false;
