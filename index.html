@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Model Trainer - Memory Optimized</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Neural Network Trainer (512MB RAM Optimized)</h1>
+            <div class="controls">
+                <button id="initializeBtn">Initialize Network</button>
+                <button id="trainBtn">Auto-Train to 100% Accuracy</button>
+                <button id="stopBtn">Stop Training</button>
+                <button id="testBtn">Test Model</button>
+                <button id="saveBtn">Save Model</button>
+                <button id="loadBtn">Load Model</button>
+            </div>
+        </header>
+        
+        <div class="model-config">
+            <div class="config-section">
+                <h3>Network Architecture (Memory Optimized)</h3>
+                <div class="input-group">
+                    <label>Input Layer Size:</label>
+                    <input type="number" id="inputSize" value="784" min="1" max="1000">
+                </div>
+                <div class="input-group">
+                    <label>Hidden Layers:</label>
+                    <div id="hiddenLayers">
+                        <input type="number" class="layer-size" value="64" min="1" max="256">
+                        <input type="number" class="layer-size" value="32" min="1" max="128">
+                    </div>
+                    <button id="addLayerBtn">Add Layer</button>
+                </div>
+                <div class="input-group">
+                    <label>Output Layer Size:</label>
+                    <input type="number" id="outputSize" value="10" min="1" max="100">
+                </div>
+            </div>
+            
+            <div class="config-section">
+                <h3>Training Parameters (Low Memory)</h3>
+                <div class="input-group">
+                    <label>Learning Rate:</label>
+                    <input type="number" id="learningRate" value="0.005" min="0.0001" max="0.1" step="0.0001">
+                </div>
+                <div class="input-group">
+                    <label>Max Epochs:</label>
+                    <input type="number" id="epochs" value="500" min="1" max="2000">
+                </div>
+                <div class="input-group">
+                    <label>Batch Size:</label>
+                    <input type="number" id="batchSize" value="4" min="1" max="16">
+                </div>
+                <div class="input-group">
+                    <label>Activation Function:</label>
+                    <select id="activation">
+                        <option value="relu">ReLU (Recommended)</option>
+                        <option value="sigmoid">Sigmoid</option>
+                        <option value="tanh">Tanh</option>
+                        <option value="softmax">Softmax</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="config-section">
+                <h3>Dataset (Small for Low Memory)</h3>
+                <div class="input-group">
+                    <label>Dataset Type:</label>
+                    <select id="datasetType">
+                        <option value="mnist">MNIST (Digits - Small)</option>
+                        <option value="iris">Iris (Flowers)</option>
+                        <option value="xor">XOR Problem</option>
+                        <option value="custom">Custom Data</option>
+                    </select>
+                </div>
+                <div class="input-group" id="customDataSection" style="display: none;">
+                    <label>Upload Training Data (JSON):</label>
+                    <input type="file" id="dataFile" accept=".json">
+                    <button id="loadDataBtn">Load Data</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="training-info">
+            <div class="info-box">
+                <div class="info-label">Current Epoch</div>
+                <div class="info-value" id="currentEpoch">0</div>
+            </div>
+            <div class="info-box">
+                <div class="info-label">Training Loss</div>
+                <div class="info-value" id="trainingLoss">0.0000</div>
+            </div>
+            <div class="info-box">
+                <div class="info-label">Validation Loss</div>
+                <div class="info-value" id="validationLoss">0.0000</div>
+            </div>
+            <div class="info-box">
+                <div class="info-label">Accuracy</div>
+                <div class="info-value" id="accuracy">0.00%</div>
+            </div>
+            <div class="info-box">
+                <div class="info-label">Training Time</div>
+                <div class="info-value" id="trainingTime">00:00:00</div>
+            </div>
+        </div>
+        
+        <div class="visualization">
+            <div class="chart-container">
+                <h3>Training Progress</h3>
+                <canvas id="lossChart" width="400" height="200"></canvas>
+            </div>
+            <div class="chart-container">
+                <h3>Accuracy Progress</h3>
+                <canvas id="accuracyChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+        
+        <div class="testing-section">
+            <h3>Model Testing</h3>
+            <div class="test-inputs">
+                <div id="testInputs"></div>
+                <button id="predictBtn">Make Prediction</button>
+            </div>
+            <div class="test-output">
+                <h4>Prediction Results:</h4>
+                <div id="predictionResults"></div>
+            </div>
+        </div>
+        
+        <div class="logs">
+            <h3>Training Logs</h3>
+            <div id="logOutput" class="log-container"></div>
+        </div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
