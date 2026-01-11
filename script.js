@@ -32,44 +32,66 @@ class NeuralNetwork {
         return matrix;
     }
 
-    activationFunction(x, derivative = false) {
+    activationDerivative(x) {
+        // Handle both 1D and 2D arrays
+        if (Array.isArray(x[0])) {
+            // 2D array
+            return x.map(row => this.activationDerivative(row));
+        }
+        
+        // 1D array
         switch (this.activation) {
             case 'relu':
-                if (derivative) {
-                    return x.map(val => val > 0 ? 1 : 0);
-                }
-                return x.map(val => Math.max(0, val));
-            
+                return x.map(val => val > 0 ? 1 : 0);
             case 'sigmoid':
-                if (derivative) {
-                    const sig = this.activationFunction(x);
-                    return sig.map(val => val * (1 - val));
-                }
-                return x.map(val => 1 / (1 + Math.exp(-val)));
-            
+                const sig = this.activationFunction(x);
+                return sig.map(val => val * (1 - val));
             case 'tanh':
-                if (derivative) {
-                    const tanh = this.activationFunction(x);
-                    return tanh.map(val => 1 - val * val);
-                }
-                return x.map(val => Math.tanh(val));
-            
+                const tanh = this.activationFunction(x);
+                return tanh.map(val => 1 - val * val);
             case 'softmax':
-                if (derivative) {
-                    // Softmax derivative is more complex, simplified here
-                    const soft = this.activationFunction(x);
-                    return soft.map(val => val * (1 - val));
-                }
+                const soft = this.activationFunction(x);
+                return soft.map(val => val * (1 - val));
+            default:
+                return x.map(() => 1);
+        }
+    }
+
+    activationFunction(x) {
+        // Handle both 1D and 2D arrays
+        if (Array.isArray(x[0])) {
+            // 2D array
+            return x.map(row => this.activationFunction(row));
+        }
+        
+        // 1D array
+        switch (this.activation) {
+            case 'relu':
+                return x.map(val => Math.max(0, val));
+            case 'sigmoid':
+                return x.map(val => 1 / (1 + Math.exp(-val)));
+            case 'tanh':
+                return x.map(val => Math.tanh(val));
+            case 'softmax':
                 const expX = x.map(val => Math.exp(val));
                 const sumExp = expX.reduce((a, b) => a + b, 0);
                 return expX.map(val => val / sumExp);
-            
             default:
                 return x;
         }
     }
 
     matrixMultiply(A, B) {
+        // Handle different dimensions
+        if (!Array.isArray(A[0])) {
+            // A is 1D, convert to 2D
+            A = [A];
+        }
+        if (!Array.isArray(B[0])) {
+            // B is 1D, convert to 2D
+            B = B.map(val => [val]);
+        }
+        
         const result = [];
         for (let i = 0; i < A.length; i++) {
             result[i] = [];
@@ -85,14 +107,33 @@ class NeuralNetwork {
     }
 
     matrixAdd(A, B) {
-        return A.map((row, i) => row.map((val, j) => val + B[i][j]));
+        // Handle both 1D and 2D arrays
+        if (A[0] && Array.isArray(A[0])) {
+            // 2D arrays
+            return A.map((row, i) => row.map((val, j) => val + B[i][j]));
+        } else {
+            // 1D arrays
+            return A.map((val, i) => val + B[i]);
+        }
     }
 
     matrixSubtract(A, B) {
-        return A.map((row, i) => row.map((val, j) => val - B[i][j]));
+        // Handle both 1D and 2D arrays
+        if (A[0] && Array.isArray(A[0])) {
+            // 2D arrays
+            return A.map((row, i) => row.map((val, j) => val - B[i][j]));
+        } else {
+            // 1D arrays
+            return A.map((val, i) => val - B[i]);
+        }
     }
 
     transpose(matrix) {
+        // Handle both 1D and 2D arrays
+        if (!Array.isArray(matrix[0])) {
+            // 1D array, convert to 2D then transpose
+            return [[matrix[0]]];
+        }
         return matrix[0].map((_, colIndex) => matrix.map(row => row[colIndex]));
     }
 
@@ -120,43 +161,48 @@ class NeuralNetwork {
     }
 
     backward(X, y, learningRate) {
-        const output = this.forward(X);
-        const numLayers = this.weights.length;
-        
-        // Calculate output error
-        let error = this.matrixSubtract(output, y);
-        
-        // Backpropagate
-        for (let i = numLayers - 1; i >= 0; i--) {
-            const activation = this.activations[i + 1];
-            const prevActivation = this.activations[i];
+        try {
+            const output = this.forward(X);
+            const numLayers = this.weights.length;
             
-            // Calculate gradient
-            let gradient;
-            if (i === numLayers - 1 && this.activation === 'softmax') {
-                gradient = error;
-            } else {
-                const activationDerivative = this.activationFunction(activation, true);
-                gradient = [];
-                for (let j = 0; j < error.length; j++) {
-                    gradient[j] = [];
-                    for (let k = 0; k < error[0].length; k++) {
-                        gradient[j][k] = error[j][k] * activationDerivative[j][k];
+            // Calculate output error
+            let error = this.matrixSubtract(output, y);
+            
+            // Backpropagate
+            for (let i = numLayers - 1; i >= 0; i--) {
+                const activation = this.activations[i + 1];
+                const prevActivation = this.activations[i];
+                
+                // Calculate gradient
+                let gradient;
+                if (i === numLayers - 1 && this.activation === 'softmax') {
+                    gradient = error;
+                } else {
+                    const activationDerivative = this.activationDerivative(activation);
+                    gradient = [];
+                    for (let j = 0; j < error.length; j++) {
+                        gradient[j] = [];
+                        for (let k = 0; k < error[0].length; k++) {
+                            gradient[j][k] = error[j][k] * activationDerivative[j][k];
+                        }
                     }
                 }
+                
+                // Update weights and biases
+                const weightGradient = this.matrixMultiply(gradient, this.transpose(prevActivation));
+                this.weights[i] = this.matrixSubtract(this.weights[i], 
+                    this.scalarMultiply(weightGradient, learningRate));
+                this.biases[i] = this.matrixSubtract(this.biases[i], 
+                    this.scalarMultiply(gradient, learningRate));
+                
+                // Calculate error for next layer
+                if (i > 0) {
+                    error = this.matrixMultiply(this.transpose(this.weights[i]), error);
+                }
             }
-            
-            // Update weights and biases
-            const weightGradient = this.matrixMultiply(gradient, this.transpose(prevActivation));
-            this.weights[i] = this.matrixSubtract(this.weights[i], 
-                this.scalarMultiply(weightGradient, learningRate));
-            this.biases[i] = this.matrixSubtract(this.biases[i], 
-                this.scalarMultiply(gradient, learningRate));
-            
-            // Calculate error for next layer
-            if (i > 0) {
-                error = this.matrixMultiply(this.transpose(this.weights[i]), error);
-            }
+        } catch (error) {
+            console.error('Error in backward pass:', error);
+            throw error;
         }
     }
 
