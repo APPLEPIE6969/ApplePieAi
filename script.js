@@ -384,24 +384,33 @@ class AITrainer {
     }
 
     initializeNetwork() {
-        const inputSize = parseInt(document.getElementById('inputSize').value);
-        const outputSize = parseInt(document.getElementById('outputSize').value);
-        const hiddenLayerInputs = document.querySelectorAll('.layer-size');
-        const activation = document.getElementById('activation').value;
-        
-        const layers = [inputSize];
-        hiddenLayerInputs.forEach(input => {
-            layers.push(parseInt(input.value));
-        });
-        layers.push(outputSize);
-        
-        this.network = new NeuralNetwork(layers, activation);
-        this.chartManager.reset();
-        this.log(`Network initialized: ${layers.join('-')} with ${activation} activation`, 'success');
-        
-        // Load dataset
-        this.loadDataset();
-        this.setupTestInputs();
+        try {
+            const inputSize = parseInt(document.getElementById('inputSize').value);
+            const outputSize = parseInt(document.getElementById('outputSize').value);
+            const hiddenLayerInputs = document.querySelectorAll('.layer-size');
+            const activation = document.getElementById('activation').value;
+            
+            const layers = [inputSize];
+            hiddenLayerInputs.forEach(input => {
+                const size = parseInt(input.value);
+                if (size > 0) layers.push(size);
+            });
+            layers.push(outputSize);
+            
+            this.network = new NeuralNetwork(layers, activation);
+            this.chartManager.reset();
+            this.log(`✅ Network initialized: ${layers.join('-')} layers with ${activation} activation`, 'success');
+            
+            // Load dataset
+            this.loadDataset();
+            this.setupTestInputs();
+            
+            // Enable training button
+            document.getElementById('trainBtn').disabled = false;
+            
+        } catch (error) {
+            this.log(`❌ Error initializing network: ${error.message}`, 'error');
+        }
     }
 
     loadDataset() {
@@ -450,13 +459,18 @@ class AITrainer {
     }
 
     async startTraining() {
-        if (!this.network || !this.dataset) {
-            this.log('Please initialize network and load dataset first', 'error');
+        if (!this.network) {
+            this.log('❌ Please initialize network first', 'error');
+            return;
+        }
+        
+        if (!this.dataset) {
+            this.log('❌ Please load dataset first', 'error');
             return;
         }
         
         if (this.isTraining) {
-            this.log('Training already in progress', 'warning');
+            this.log('⚠️ Training already in progress', 'warning');
             return;
         }
         
@@ -468,52 +482,54 @@ class AITrainer {
         const epochs = parseInt(document.getElementById('epochs').value);
         const batchSize = parseInt(document.getElementById('batchSize').value);
         
-        this.log(`Memory-efficient training started: ${epochs} epochs, LR=${learningRate}, Batch=${batchSize}`, 'info');
+        this.log(`🚀 Starting training: ${epochs} epochs, LR=${learningRate}, Batch=${batchSize}`, 'info');
+        this.log(`📊 Dataset: ${this.dataset.trainingData.length} training samples`, 'info');
         
         document.getElementById('trainBtn').disabled = true;
         document.getElementById('stopBtn').disabled = false;
         
         let bestAccuracy = 0;
         let patienceCounter = 0;
-        const maxPatience = 100; // Increased patience for better training
+        const maxPatience = 100;
+        let currentLearningRate = learningRate;
         
         for (let epoch = 0; epoch < epochs && this.isTraining; epoch++) {
-            await this.trainEpoch(learningRate, batchSize);
+            await this.trainEpoch(currentLearningRate, batchSize);
             this.currentEpoch = epoch + 1;
             this.updateUI();
             
             const metrics = this.calculateMetrics();
             
-            // Adaptive learning rate for better convergence
+            // Adaptive learning rate
             if (epoch > 100 && metrics.accuracy > 90) {
-                learningRate *= 0.999; // Gradual decay
+                currentLearningRate *= 0.999;
             }
             if (epoch > 200 && metrics.accuracy > 95) {
-                learningRate *= 0.995; // Slower decay for fine-tuning
+                currentLearningRate *= 0.995;
             }
             
             // Early stopping with patience
             if (metrics.accuracy > bestAccuracy) {
                 bestAccuracy = metrics.accuracy;
                 patienceCounter = 0;
-                this.log(`New best accuracy: ${bestAccuracy.toFixed(2)}%`, 'success');
+                this.log(`🎯 New best accuracy: ${bestAccuracy.toFixed(2)}%`, 'success');
             } else {
                 patienceCounter++;
             }
             
             // Auto-stop if no improvement
             if (patienceCounter >= maxPatience) {
-                this.log(`Early stopping triggered - no improvement for ${maxPatience} epochs`, 'warning');
+                this.log(`⏹️ Early stopping - no improvement for ${maxPatience} epochs`, 'warning');
                 break;
             }
             
-            // Auto-stop only if perfect performance achieved
+            // Auto-stop if perfect performance
             if (metrics.accuracy >= 99.9) {
-                this.log(`Near-perfect accuracy achieved: ${metrics.accuracy.toFixed(2)}%`, 'success');
+                this.log(`🏆 Near-perfect accuracy: ${metrics.accuracy.toFixed(2)}%`, 'success');
                 break;
             }
             
-            // Memory cleanup every 10 epochs
+            // Memory cleanup
             if (epoch % 10 === 0) {
                 this.cleanupMemory();
                 await new Promise(resolve => setTimeout(resolve, 50));
@@ -521,7 +537,7 @@ class AITrainer {
         }
         
         this.stopTraining();
-        this.log(`Training completed. Best accuracy: ${bestAccuracy.toFixed(2)}%`, 'success');
+        this.log(`✅ Training completed! Best accuracy: ${bestAccuracy.toFixed(2)}%`, 'success');
     }
 
     async trainEpoch(learningRate, batchSize) {

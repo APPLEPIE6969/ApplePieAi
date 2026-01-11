@@ -28,9 +28,72 @@ header {
 
 h1 {
     color: #4a5568;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
     font-size: 2.5em;
     font-weight: 300;
+}
+
+.subtitle {
+    color: #718096;
+    font-size: 1.1em;
+    margin-bottom: 25px;
+}
+
+.quick-start {
+    background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+    border-radius: 15px;
+    padding: 30px;
+    margin-bottom: 30px;
+    box-shadow: 0 10px 30px rgba(72, 187, 120, 0.2);
+    color: white;
+}
+
+.quick-start h2 {
+    color: white;
+    text-align: center;
+    margin-bottom: 25px;
+    font-size: 1.8em;
+}
+
+.steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.step {
+    display: flex;
+    align-items: flex-start;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 20px;
+    backdrop-filter: blur(10px);
+}
+
+.step-number {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    margin-right: 15px;
+    flex-shrink: 0;
+}
+
+.step-content h3 {
+    color: white;
+    margin-bottom: 8px;
+    font-size: 1.1em;
+}
+
+.step-content p {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.9em;
+    line-height: 1.4;
 }
 
 .controls {
@@ -99,6 +162,13 @@ button:disabled {
     margin-bottom: 5px;
     color: #718096;
     font-weight: 500;
+}
+
+.help-text {
+    font-weight: normal;
+    color: #a0aec0;
+    font-size: 0.85em;
+    margin-left: 5px;
 }
 
 .input-group input,

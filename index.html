@@ -9,26 +9,61 @@
 <body>
     <div class="container">
         <header>
-            <h1>Neural Network Trainer (512MB RAM Optimized)</h1>
+            <h1>🧠 Neural Network Trainer (512MB RAM Optimized)</h1>
+            <p class="subtitle">Train AI models directly in your browser - no server required!</p>
             <div class="controls">
-                <button id="initializeBtn">Initialize Network</button>
-                <button id="trainBtn">Auto-Train to 100% Accuracy</button>
-                <button id="stopBtn">Stop Training</button>
-                <button id="testBtn">Test Model</button>
-                <button id="saveBtn">Save Model</button>
-                <button id="loadBtn">Load Model</button>
+                <button id="initializeBtn">🔧 Initialize Network</button>
+                <button id="trainBtn" disabled>🚀 Auto-Train to 100% Accuracy</button>
+                <button id="stopBtn" disabled>⏹️ Stop Training</button>
+                <button id="testBtn">🧪 Test Model</button>
+                <button id="saveBtn">💾 Save Model</button>
+                <button id="loadBtn">📁 Load Model</button>
             </div>
         </header>
+        
+        <div class="quick-start">
+            <h2>🚀 Quick Start Guide</h2>
+            <div class="steps">
+                <div class="step">
+                    <span class="step-number">1</span>
+                    <div class="step-content">
+                        <h3>Initialize Network</h3>
+                        <p>Click "Initialize Network" to create your AI model with the settings below</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <span class="step-number">2</span>
+                    <div class="step-content">
+                        <h3>Start Training</h3>
+                        <p>Click "Auto-Train to 100% Accuracy" - the AI will train until it reaches near-perfect performance</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <span class="step-number">3</span>
+                    <div class="step-content">
+                        <h3>Monitor Progress</h3>
+                        <p>Watch real-time charts and metrics as your model learns</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <span class="step-number">4</span>
+                    <div class="step-content">
+                        <h3>Test & Save</h3>
+                        <p>Test your trained model and save it for future use</p>
+                    </div>
+                </div>
+            </div>
+        </div>
         
         <div class="model-config">
             <div class="config-section">
                 <h3>Network Architecture (Memory Optimized)</h3>
                 <div class="input-group">
-                    <label>Input Layer Size:</label>
+                    <label>Input Layer Size: <span class="help-text">Number of input features (784 for MNIST images)</span></label>
                     <input type="number" id="inputSize" value="784" min="1" max="1000">
                 </div>
                 <div class="input-group">
-                    <label>Hidden Layers:</label>
+                    <label>Hidden Layers: <span class="help-text">Neurons in hidden layers (smaller = less memory)</span></label>
                     <div id="hiddenLayers">
                         <input type="number" class="layer-size" value="64" min="1" max="256">
                         <input type="number" class="layer-size" value="32" min="1" max="128">
@@ -36,7 +71,7 @@
                     <button id="addLayerBtn">Add Layer</button>
                 </div>
                 <div class="input-group">
-                    <label>Output Layer Size:</label>
+                    <label>Output Layer Size: <span class="help-text">Number of output classes (10 for digits 0-9)</span></label>
                     <input type="number" id="outputSize" value="10" min="1" max="100">
                 </div>
             </div>
