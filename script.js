@@ -343,6 +343,20 @@ class AITrainer {
         document.getElementById('datasetType').addEventListener('change', () => this.updateDatasetSection());
         document.getElementById('loadDataBtn').addEventListener('click', () => this.loadCustomData());
         document.getElementById('predictBtn').addEventListener('click', () => this.makePrediction());
+        
+        // Slider event listeners
+        const accuracyGoalSlider = document.getElementById('accuracyGoal');
+        const patienceSlider = document.getElementById('patience');
+        
+        accuracyGoalSlider.addEventListener('input', (e) => {
+            const value = parseFloat(e.target.value);
+            document.getElementById('accuracyGoalValue').textContent = value.toFixed(1) + '%';
+        });
+        
+        patienceSlider.addEventListener('input', (e) => {
+            const value = parseInt(e.target.value);
+            document.getElementById('patienceValue').textContent = value + ' epochs';
+        });
     }
 
     addHiddenLayer() {
@@ -494,7 +508,8 @@ class AITrainer {
         
         let bestAccuracy = 0;
         let patienceCounter = 0;
-        const maxPatience = 100;
+        const accuracyGoal = parseFloat(document.getElementById('accuracyGoal').value);
+        const maxPatience = parseInt(document.getElementById('patience').value);
         let currentLearningRate = learningRate;
         
         for (let epoch = 0; epoch < epochs && this.isTraining; epoch++) {
@@ -527,9 +542,9 @@ class AITrainer {
                 break;
             }
             
-            // Auto-stop if perfect performance
-            if (metrics.accuracy >= 99.9) {
-                this.log(`🏆 Near-perfect accuracy: ${metrics.accuracy.toFixed(2)}%`, 'success');
+            // Auto-stop if target accuracy reached
+            if (metrics.accuracy >= accuracyGoal) {
+                this.log(`🎯 Target accuracy reached: ${metrics.accuracy.toFixed(2)}%`, 'success');
                 break;
             }
             
@@ -770,6 +785,8 @@ class AITrainer {
     }
 
     startProgressMonitoring(totalEpochs) {
+        const accuracyGoal = parseFloat(document.getElementById('accuracyGoal').value);
+        
         // Update progress bar every second
         this.progressInterval = setInterval(() => {
             if (this.isTraining && this.currentEpoch > 0) {
@@ -777,11 +794,11 @@ class AITrainer {
                 const metrics = this.calculateMetrics();
                 
                 // Update progress bar
-                this.updateProgressBar(progress, `Epoch ${this.currentEpoch}/${totalEpochs} - Accuracy: ${metrics.accuracy.toFixed(1)}%`);
+                this.updateProgressBar(progress, `Epoch ${this.currentEpoch}/${totalEpochs} - Accuracy: ${metrics.accuracy.toFixed(1)}% (Goal: ${accuracyGoal.toFixed(1)}%)`);
                 
                 // Log accuracy improvement every second
                 if (metrics.accuracy > 0) {
-                    console.log(`Current accuracy: ${metrics.accuracy.toFixed(2)}%`);
+                    console.log(`Current accuracy: ${metrics.accuracy.toFixed(2)}% (Target: ${accuracyGoal.toFixed(1)}%)`);
                 }
             }
         }, 1000); // Update every second

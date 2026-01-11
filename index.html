@@ -150,6 +150,24 @@
             </div>
             
             <div class="config-section">
+                <h3>Training Goals</h3>
+                <div class="input-group">
+                    <label>Target Accuracy: <span class="help-text">When to stop training (default 99.9%)</span></label>
+                    <div class="slider-container">
+                        <input type="range" id="accuracyGoal" min="50" max="99.9" value="99.9" step="0.1" class="slider">
+                        <div class="slider-value" id="accuracyGoalValue">99.9%</div>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>Patience: <span class="help-text">Epochs without improvement before stopping (default 100)</span></label>
+                    <div class="slider-container">
+                        <input type="range" id="patience" min="10" max="200" value="100" step="10" class="slider">
+                        <div class="slider-value" id="patienceValue">100 epochs</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="config-section">
                 <h3>Dataset (Small for Low Memory)</h3>
                 <div class="input-group">
                     <label>Dataset Type:</label>
