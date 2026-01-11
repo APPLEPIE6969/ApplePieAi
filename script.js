@@ -512,47 +512,68 @@ class AITrainer {
         const maxPatience = parseInt(document.getElementById('patience').value);
         let currentLearningRate = learningRate;
         
-        for (let epoch = 0; epoch < epochs && this.isTraining; epoch++) {
-            await this.trainEpoch(currentLearningRate, batchSize);
-            this.currentEpoch = epoch + 1;
-            this.updateUI();
-            
-            const metrics = this.calculateMetrics();
-            
-            // Adaptive learning rate
-            if (epoch > 100 && metrics.accuracy > 90) {
-                currentLearningRate *= 0.999;
+        // Add crash detection
+        this.crashDetectionTimer = setTimeout(() => {
+            if (this.isTraining) {
+                this.log('💥 Training appears to have crashed or frozen', 'error');
+                this.stopTraining();
             }
-            if (epoch > 200 && metrics.accuracy > 95) {
-                currentLearningRate *= 0.995;
+        }, 30000); // 30 seconds timeout
+        
+        try {
+            for (let epoch = 0; epoch < epochs && this.isTraining; epoch++) {
+                await this.trainEpoch(currentLearningRate, batchSize);
+                this.currentEpoch = epoch + 1;
+                this.updateUI();
+                
+                const metrics = this.calculateMetrics();
+                
+                // Adaptive learning rate
+                if (epoch > 100 && metrics.accuracy > 90) {
+                    currentLearningRate *= 0.999;
+                }
+                if (epoch > 200 && metrics.accuracy > 95) {
+                    currentLearningRate *= 0.995;
+                }
+                
+                // Early stopping with patience
+                if (metrics.accuracy > bestAccuracy) {
+                    bestAccuracy = metrics.accuracy;
+                    patienceCounter = 0;
+                    this.log(`🎯 New best accuracy: ${bestAccuracy.toFixed(2)}%`, 'success');
+                } else {
+                    patienceCounter++;
+                }
+                
+                // Auto-stop if no improvement
+                if (patienceCounter >= maxPatience) {
+                    this.log(`⏹️ Early stopping - no improvement for ${maxPatience} epochs`, 'warning');
+                    break;
+                }
+                
+                // Auto-stop if target accuracy reached
+                if (metrics.accuracy >= accuracyGoal) {
+                    this.log(`🎯 Target accuracy reached: ${metrics.accuracy.toFixed(2)}%`, 'success');
+                    break;
+                }
+                
+                // Reset crash detection timer
+                clearTimeout(this.crashDetectionTimer);
+                this.crashDetectionTimer = setTimeout(() => {
+                    if (this.isTraining) {
+                        this.log('💥 Training appears to have crashed or frozen', 'error');
+                        this.stopTraining();
+                    }
+                }, 30000);
+                
+                // Memory cleanup
+                if (epoch % 10 === 0) {
+                    this.cleanupMemory();
+                    await new Promise(resolve => setTimeout(resolve, 50));
+                }
             }
-            
-            // Early stopping with patience
-            if (metrics.accuracy > bestAccuracy) {
-                bestAccuracy = metrics.accuracy;
-                patienceCounter = 0;
-                this.log(`🎯 New best accuracy: ${bestAccuracy.toFixed(2)}%`, 'success');
-            } else {
-                patienceCounter++;
-            }
-            
-            // Auto-stop if no improvement
-            if (patienceCounter >= maxPatience) {
-                this.log(`⏹️ Early stopping - no improvement for ${maxPatience} epochs`, 'warning');
-                break;
-            }
-            
-            // Auto-stop if target accuracy reached
-            if (metrics.accuracy >= accuracyGoal) {
-                this.log(`🎯 Target accuracy reached: ${metrics.accuracy.toFixed(2)}%`, 'success');
-                break;
-            }
-            
-            // Memory cleanup
-            if (epoch % 10 === 0) {
-                this.cleanupMemory();
-                await new Promise(resolve => setTimeout(resolve, 50));
-            }
+        } catch (error) {
+            this.log(`💥 Training crashed: ${error.message}`, 'error');
         }
         
         this.stopTraining();
@@ -603,27 +624,37 @@ class AITrainer {
             return { loss: 0, accuracy: 0 };
         }
         
-        let totalLoss = 0;
-        let correct = 0;
-        const { testData } = this.dataset;
-        
-        for (const sample of testData) {
-            const prediction = this.network.forward(sample.input);
-            const loss = this.calculateLoss(prediction, sample.output);
-            totalLoss += loss;
+        try {
+            let totalLoss = 0;
+            let correct = 0;
+            const { testData } = this.dataset;
             
-            // Check if prediction is correct
-            const predIndex = this.argmax(prediction.map(p => p[0]));
-            const trueIndex = this.argmax(sample.output.map(o => o[0]));
-            if (predIndex === trueIndex) {
-                correct++;
+            for (const sample of testData) {
+                const prediction = this.network.forward(sample.input);
+                const loss = this.calculateLoss(prediction, sample.output);
+                totalLoss += loss;
+                
+                // Check if prediction is correct
+                const predIndex = this.argmax(prediction.map(p => p[0]));
+                const trueIndex = this.argmax(sample.output.map(o => o[0]));
+                if (predIndex === trueIndex) {
+                    correct++;
+                }
             }
+            
+            const accuracy = (correct / testData.length) * 100;
+            const loss = totalLoss / testData.length;
+            
+            // Update UI in real-time
+            document.getElementById('trainingLoss').textContent = loss.toFixed(4);
+            document.getElementById('validationLoss').textContent = loss.toFixed(4);
+            document.getElementById('accuracy').textContent = accuracy.toFixed(2) + '%';
+            
+            return { loss, accuracy };
+        } catch (error) {
+            this.log(`❌ Error calculating metrics: ${error.message}`, 'error');
+            return { loss: 0, accuracy: 0 };
         }
-        
-        return {
-            loss: totalLoss / testData.length,
-            accuracy: (correct / testData.length) * 100
-        };
     }
 
     calculateLoss(prediction, target) {
@@ -663,24 +694,6 @@ class AITrainer {
         }
         
         // Update progress bar to show completion
-        this.updateProgressBar(100, 'Training completed');
-    }
-
-    testModel() {
-        if (!this.network || !this.dataset) {
-            this.log('Please initialize network and load dataset first', 'error');
-            return;
-        }
-        
-        const metrics = this.calculateMetrics();
-        this.log(`Test Results: Loss=${metrics.loss.toFixed(4)}, Accuracy=${metrics.accuracy.toFixed(2)}%`, 'success');
-        
-        // Update UI
-        document.getElementById('validationLoss').textContent = metrics.loss.toFixed(4);
-        document.getElementById('accuracy').textContent = metrics.accuracy.toFixed(2) + '%';
-    }
-
-    makePrediction() {
         if (!this.network) {
             this.log('Please initialize network first', 'error');
             return;
