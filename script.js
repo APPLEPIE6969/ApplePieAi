@@ -233,59 +233,107 @@ class NeuralNetwork {
 }
 
 class Dataset {
-    static getMNIST() {
-        // Memory-efficient MNIST-like data generation
+    static getChatbot() {
+        // Simple Q&A chatbot dataset
+        const conversations = [
+            { input: "hello", output: "Hello! How can I help you today?" },
+            { input: "how are you", output: "I'm doing great, thanks for asking!" },
+            { input: "what is your name", output: "I'm a chatbot trained to help you." },
+            { input: "goodbye", output: "Goodbye! Have a great day!" },
+            { input: "thank you", output: "You're welcome!" },
+            { input: "help", output: "I'm here to help! Ask me anything." },
+            { input: "what can you do", output: "I can chat with you and answer questions." },
+            { input: "how old are you", output: "I'm as old as the code that created me!" },
+            { input: "where are you from", output: "I exist in the digital world." },
+            { input: "tell me a joke", output: "Why don't scientists trust atoms? Because they make up everything!" }
+        ];
+        
+        return this.processChatData(conversations);
+    }
+    
+    static getConversation() {
+        // Extended conversation pairs
+        const conversations = [
+            { input: "hi there", output: "Hello! Nice to meet you." },
+            { input: "how's it going", output: "It's going well! How about you?" },
+            { input: "what's up", output: "Not much, just here to chat!" },
+            { input: "nice to meet you", output: "Nice to meet you too!" },
+            { input: "how was your day", output: "Every day is a good day when I get to help people!" },
+            { input: "what do you like", output: "I like helping people and having interesting conversations." },
+            { input: "what's the weather", output: "I don't have access to weather data, but I hope it's nice where you are!" },
+            { input: "are you real", output: "I'm as real as the conversations we have!" },
+            { input: "can you learn", output: "I can learn from our conversations and improve over time." },
+            { input: "what time is it", output: "I don't have access to a clock, but time flies when you're having fun!" }
+        ];
+        
+        return this.processChatData(conversations);
+    }
+    
+    static processChatData(conversations) {
+        const vocabSize = parseInt(document.getElementById('vocabSize')?.value || 1000);
+        const maxSeqLength = parseInt(document.getElementById('maxSeqLength')?.value || 20);
+        
+        // Build vocabulary
+        const vocab = new Set();
+        conversations.forEach(conv => {
+            conv.input.split(' ').forEach(word => vocab.add(word.toLowerCase()));
+            conv.output.split(' ').forEach(word => vocab.add(word.toLowerCase()));
+        });
+        
+        const vocabArray = Array.from(vocab).slice(0, vocabSize);
+        const wordToIndex = {};
+        vocabArray.forEach((word, index) => {
+            wordToIndex[word] = index;
+        });
+        
+        // Convert conversations to numerical data
         const trainingData = [];
-        const testData = [];
-        
-        // Reduced dataset size for 512MB RAM
-        for (let i = 0; i < 200; i++) {
-            const digit = Math.floor(Math.random() * 10);
-            const input = this.randomVector(784);
-            const output = new Array(10).fill(0);
-            output[digit] = 1;
+        conversations.forEach(conv => {
+            const inputSeq = this.textToSequence(conv.input, wordToIndex, maxSeqLength);
+            const outputSeq = this.textToSequence(conv.output, wordToIndex, maxSeqLength);
             
-            if (i < 160) {
-                trainingData.push({ input: input.map(v => [v]), output: output.map(v => [v]) });
-            } else {
-                testData.push({ input: input.map(v => [v]), output: output.map(v => [v]) });
-            }
+            trainingData.push({
+                input: inputSeq.map(val => [val]),
+                output: outputSeq.map(val => [val])
+            });
+        });
+        
+        // Split into train/test
+        const splitIndex = Math.floor(trainingData.length * 0.8);
+        const trainData = trainingData.slice(0, splitIndex);
+        const testData = trainingData.slice(splitIndex);
+        
+        return { 
+            trainingData: trainData, 
+            testData: testData,
+            vocab: vocabArray,
+            wordToIndex: wordToIndex,
+            indexToWord: vocabArray
+        };
+    }
+    
+    static textToSequence(text, wordToIndex, maxLength) {
+        const words = text.toLowerCase().split(' ');
+        const sequence = [];
+        
+        for (let i = 0; i < Math.min(words.length, maxLength); i++) {
+            const word = words[i];
+            sequence.push(wordToIndex[word] || 0); // 0 for unknown words
         }
         
-        return { trainingData, testData };
-    }
-
-    static getIris() {
-        // Simplified Iris dataset
-        const trainingData = [
-            { input: [[5.1], [3.5], [1.4], [0.2]], output: [[1], [0], [0]] },
-            { input: [[4.9], [3.0], [1.4], [0.2]], output: [[1], [0], [0]] },
-            { input: [[7.0], [3.2], [4.7], [1.4]], output: [[0], [1], [0]] },
-            { input: [[6.4], [3.2], [4.5], [1.5]], output: [[0], [1], [0]] },
-            { input: [[6.3], [3.3], [6.0], [2.5]], output: [[0], [0], [1]] },
-            { input: [[5.8], [2.7], [5.1], [1.9]], output: [[0], [0], [1]] }
-        ];
-        
-        return { trainingData, testData: trainingData };
-    }
-
-    static getXOR() {
-        const trainingData = [
-            { input: [[0], [0]], output: [[0]] },
-            { input: [[0], [1]], output: [[1]] },
-            { input: [[1], [0]], output: [[1]] },
-            { input: [[1], [1]], output: [[0]] }
-        ];
-        
-        return { trainingData, testData: trainingData };
-    }
-
-    static randomVector(size) {
-        const vector = [];
-        for (let i = 0; i < size; i++) {
-            vector.push(Math.random());
+        // Pad sequence if needed
+        while (sequence.length < maxLength) {
+            sequence.push(0); // 0 for padding
         }
-        return vector;
+        
+        return sequence;
+    }
+    
+    static sequenceToText(sequence, indexToWord) {
+        return sequence
+            .filter(index => index > 0) // Remove padding
+            .map(index => indexToWord[index] || '<unk>')
+            .join(' ');
     }
 }
 
@@ -389,6 +437,12 @@ class AITrainer {
         document.getElementById('datasetType').addEventListener('change', () => this.updateDatasetSection());
         document.getElementById('loadDataBtn').addEventListener('click', () => this.loadCustomData());
         document.getElementById('predictBtn').addEventListener('click', () => this.makePrediction());
+        document.getElementById('sendBtn').addEventListener('click', () => this.sendMessage());
+        document.getElementById('chatInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                this.sendMessage();
+            }
+        });
         
         // Slider event listeners
         const accuracyGoalSlider = document.getElementById('accuracyGoal');
@@ -478,24 +532,24 @@ class AITrainer {
         const datasetType = document.getElementById('datasetType').value;
         
         switch (datasetType) {
-            case 'mnist':
-                this.dataset = Dataset.getMNIST();
+            case 'chatbot':
+                this.dataset = Dataset.getChatbot();
+                this.log('📚 Loaded Simple Chatbot dataset', 'info');
                 break;
-            case 'iris':
-                this.dataset = Dataset.getIris();
-                break;
-            case 'xor':
-                this.dataset = Dataset.getXOR();
+            case 'conversation':
+                this.dataset = Dataset.getConversation();
+                this.log('📚 Loaded Conversation Pairs dataset', 'info');
                 break;
             case 'custom':
-                if (!this.dataset) {
-                    this.log('Please load custom data first', 'warning');
-                }
+                // Custom data will be loaded via file upload
                 break;
+            default:
+                this.dataset = Dataset.getChatbot();
         }
         
-        if (this.dataset) {
-            this.log(`Dataset loaded: ${datasetType}`, 'info');
+        if (this.dataset && datasetType !== 'custom') {
+            this.log(`📊 Dataset loaded: ${this.dataset.trainingData.length} training samples`, 'info');
+            this.log(`📝 Vocabulary size: ${this.dataset.vocab.length} words`, 'info');
         }
     }
 
@@ -846,7 +900,7 @@ class AITrainer {
     startProgressMonitoring(totalEpochs) {
         const accuracyGoal = parseFloat(document.getElementById('accuracyGoal').value);
         
-        // Update progress bar every second
+        // Update all meters every 500ms for smoother updates
         this.progressInterval = setInterval(() => {
             if (this.isTraining && this.currentEpoch > 0) {
                 const progress = (this.currentEpoch / totalEpochs) * 100;
@@ -855,18 +909,137 @@ class AITrainer {
                 // Update progress bar
                 this.updateProgressBar(progress, `Epoch ${this.currentEpoch}/${totalEpochs} - Accuracy: ${metrics.accuracy.toFixed(1)}% (Goal: ${accuracyGoal.toFixed(1)}%)`);
                 
+                // Update all UI elements in real-time
+                this.updateAllMeters(metrics, progress);
+                
                 // Log accuracy improvement every second
                 if (metrics.accuracy > 0) {
-                    console.log(`Current accuracy: ${metrics.accuracy.toFixed(2)}% (Target: ${accuracyGoal.toFixed(1)}%)`);
+                    console.log(`🎯 Current accuracy: ${metrics.accuracy.toFixed(2)}% (Target: ${accuracyGoal.toFixed(1)}%)`);
                 }
             }
-        }, 1000); // Update every second
+        }, 500); // Update every 500ms for smoother experience
     }
 
     stopProgressMonitoring() {
         if (this.progressInterval) {
             clearInterval(this.progressInterval);
             this.progressInterval = null;
+        }
+    }
+
+    updateAllMeters(metrics, progress) {
+        // Update all training metrics in real-time
+        document.getElementById('currentEpoch').textContent = this.currentEpoch;
+        document.getElementById('trainingLoss').textContent = metrics.loss.toFixed(4);
+        document.getElementById('validationLoss').textContent = metrics.loss.toFixed(4);
+        document.getElementById('accuracy').textContent = metrics.accuracy.toFixed(2) + '%';
+        
+        // Update training time
+        if (this.trainingStartTime) {
+            const elapsed = Date.now() - this.trainingStartTime;
+            const seconds = Math.floor(elapsed / 1000) % 60;
+            const minutes = Math.floor(elapsed / 60000) % 60;
+            const hours = Math.floor(elapsed / 3600000);
+            
+            document.getElementById('trainingTime').textContent = 
+                `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+        
+        // Update progress bar with color coding
+        this.updateProgressBar(progress, `Epoch ${this.currentEpoch} - Loss: ${metrics.loss.toFixed(4)} - Acc: ${metrics.accuracy.toFixed(1)}%`);
+        
+        // Add visual indicators for performance
+        this.updatePerformanceIndicators(metrics);
+    }
+
+    updatePerformanceIndicators(metrics) {
+        // Add color coding and indicators based on performance
+        const accuracyElement = document.getElementById('accuracy');
+        const lossElement = document.getElementById('trainingLoss');
+        const validationLossElement = document.getElementById('validationLoss');
+        
+        // Remove existing performance classes
+        [accuracyElement, lossElement, validationLossElement].forEach(el => {
+            el.classList.remove('high-performance', 'medium-performance', 'low-performance');
+        });
+        
+        // Color code accuracy
+        if (metrics.accuracy >= 90) {
+            accuracyElement.classList.add('high-performance');
+        } else if (metrics.accuracy >= 70) {
+            accuracyElement.classList.add('medium-performance');
+        } else {
+            accuracyElement.classList.add('low-performance');
+        }
+        
+        // Color code loss
+        if (metrics.loss <= 0.1) {
+            lossElement.classList.add('high-performance');
+            validationLossElement.classList.add('high-performance');
+        } else if (metrics.loss <= 0.5) {
+            lossElement.classList.add('medium-performance');
+            validationLossElement.classList.add('medium-performance');
+        } else {
+            lossElement.classList.add('low-performance');
+            validationLossElement.classList.add('low-performance');
+        }
+        
+        // Add performance badges
+        this.updatePerformanceBadges(metrics);
+    }
+
+    updatePerformanceBadges(metrics) {
+        // Add visual badges for performance indicators
+        let badgeText = '';
+        let badgeClass = '';
+        
+        if (metrics.accuracy >= 95) {
+            badgeText = '🏆 EXCELLENT';
+            badgeClass = 'high-performance';
+        } else if (metrics.accuracy >= 80) {
+            badgeText = '⭐ GOOD';
+            badgeClass = 'medium-performance';
+        } else if (metrics.accuracy >= 60) {
+            badgeText = '📈 LEARNING';
+            badgeClass = 'medium-performance';
+        } else {
+            badgeText = '🔄 TRAINING';
+            badgeClass = 'low-performance';
+        }
+        
+        // Update or create badge
+        let badge = document.getElementById('performanceBadge');
+        if (!badge) {
+            badge = document.createElement('div');
+            badge.id = 'performanceBadge';
+            badge.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 10px 20px;
+                border-radius: 25px;
+                font-weight: bold;
+                font-size: 14px;
+                z-index: 1000;
+                transition: all 0.3s ease;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            `;
+            document.body.appendChild(badge);
+        }
+        
+        badge.textContent = badgeText;
+        badge.className = badgeClass;
+        
+        // Color the badge
+        if (badgeClass === 'high-performance') {
+            badge.style.background = 'linear-gradient(135deg, #38a169 0%, #48bb78 100%)';
+            badge.style.color = 'white';
+        } else if (badgeClass === 'medium-performance') {
+            badge.style.background = 'linear-gradient(135deg, #d69e2e 0%, #f6e05e 100%)';
+            badge.style.color = 'white';
+        } else {
+            badge.style.background = 'linear-gradient(135deg, #e53e3e 0%, #fc8181 100%)';
+            badge.style.color = 'white';
         }
     }
 
@@ -877,11 +1050,21 @@ class AITrainer {
         progressFill.style.width = `${Math.min(percentage, 100)}%`;
         progressText.textContent = text;
         
-        // Change color based on progress
-        if (percentage >= 95) {
+        // Change color based on progress and performance
+        const metrics = this.calculateMetrics();
+        if (metrics.accuracy >= 90) {
             progressFill.style.background = 'linear-gradient(90deg, #38a169 0%, #48bb78 100%)';
         } else if (percentage >= 50) {
             progressFill.style.background = 'linear-gradient(90deg, #667eea 0%, #764ba2 100%)';
+        } else {
+            progressFill.style.background = 'linear-gradient(90deg, #ed8936 0%, #f6ad55 100%)';
+        }
+        
+        // Add pulse animation for active training
+        if (this.isTraining) {
+            progressFill.style.animation = 'pulse 2s infinite';
+        } else {
+            progressFill.style.animation = 'none';
         }
     }
 
@@ -903,20 +1086,93 @@ class AITrainer {
         }
     }
 
-    log(message, type = 'info') {
-        const logOutput = document.getElementById('logOutput');
-        const timestamp = new Date().toLocaleTimeString();
-        const logEntry = document.createElement('div');
-        logEntry.className = `log-entry ${type}`;
-        logEntry.textContent = `[${timestamp}] ${message}`;
+    sendMessage() {
+        const input = document.getElementById('chatInput');
+        const message = input.value.trim();
         
-        logOutput.appendChild(logEntry);
-        logOutput.scrollTop = logOutput.scrollHeight;
-        
-        // Keep only last 100 entries
-        while (logOutput.children.length > 100) {
-            logOutput.removeChild(logOutput.firstChild);
+        if (!message || !this.network || !this.dataset) {
+            return;
         }
+        
+        // Add user message to chat
+        this.addMessage(message, 'user');
+        
+        // Generate response
+        const response = this.generateResponse(message);
+        this.addMessage(response, 'bot');
+        
+        // Clear input
+        input.value = '';
+    }
+    
+    generateResponse(message) {
+        try {
+            // Convert message to sequence
+            const sequence = Dataset.textToSequence(
+                message, 
+                this.dataset.wordToIndex, 
+                parseInt(document.getElementById('maxSeqLength').value)
+            );
+            
+            // Get model prediction
+            const input = sequence.map(val => [val]);
+            const output = this.network.forward(input);
+            
+            // Convert output back to text
+            const outputSequence = output.map(val => Math.round(val[0]));
+            const response = Dataset.sequenceToText(outputSequence, this.dataset.indexToWord);
+            
+            // If no meaningful response, use fallback
+            if (!response || response.trim() === '') {
+                return this.getFallbackResponse(message);
+            }
+            
+            return response;
+        } catch (error) {
+            console.error('Error generating response:', error);
+            return this.getFallbackResponse(message);
+        }
+    }
+    
+    getFallbackResponse(message) {
+        const fallbacks = [
+            "That's interesting! Tell me more.",
+            "I see. What else would you like to discuss?",
+            "Thanks for sharing that with me.",
+            "I'm still learning, but I appreciate your message!",
+            "That's a good point. How else can I help you?",
+            "I'm processing what you said. Can you elaborate?"
+        ];
+        
+        // Simple keyword-based responses
+        const lowerMessage = message.toLowerCase();
+        if (lowerMessage.includes('hello') || lowerMessage.includes('hi')) {
+            return "Hello there! How can I help you today?";
+        }
+        if (lowerMessage.includes('how are')) {
+            return "I'm doing great, thanks for asking!";
+        }
+        if (lowerMessage.includes('goodbye') || lowerMessage.includes('bye')) {
+            return "Goodbye! Have a great day!";
+        }
+        if (lowerMessage.includes('thank')) {
+            return "You're welcome!";
+        }
+        
+        // Random fallback
+        return fallbacks[Math.floor(Math.random() * fallbacks.length)];
+    }
+    
+    addMessage(text, sender) {
+        const messagesContainer = document.getElementById('chatMessages');
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${sender}-message`;
+        
+        const senderLabel = sender === 'user' ? 'You' : 'AI';
+        messageDiv.innerHTML = `<strong>${senderLabel}:</strong> ${text}`;
+        
+        messagesContainer.appendChild(messageDiv);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }
 }
 
