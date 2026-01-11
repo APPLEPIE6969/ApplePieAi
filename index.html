@@ -55,6 +55,54 @@
             </div>
         </div>
         
+        <div class="explanations">
+            <h2>📚 AI Training Explained</h2>
+            <div class="explanation-grid">
+                <div class="explanation-card">
+                    <h3>🧠 Neural Network Layers</h3>
+                    <div class="explanation-content">
+                        <h4>Input Layer</h4>
+                        <p>Receives raw data (like pixels from images). Each input feature gets one neuron.</p>
+                        <h4>Hidden Layers</h4>
+                        <p>Process patterns and features. More neurons = more complex patterns, but uses more memory.</p>
+                        <h4>Output Layer</h4>
+                        <p>Produces final predictions. One neuron per possible class (10 for digits 0-9).</p>
+                    </div>
+                </div>
+                
+                <div class="explanation-card">
+                    <h3>⚙️ Training Parameters</h3>
+                    <div class="explanation-content">
+                        <h4>Learning Rate</h4>
+                        <p>How fast the AI learns. Too high = unstable, too low = very slow training.</p>
+                        <h4>Epochs</h4>
+                        <p>One full pass through all training data. More epochs = better learning but takes longer.</p>
+                        <h4>Batch Size</h4>
+                        <p>How many samples to process before updating weights. Smaller = more precise learning.</p>
+                        <h4>Activation Functions</h4>
+                        <p><strong>ReLU:</strong> Fast and efficient (recommended)<br>
+                        <strong>Sigmoid:</strong> Smooth, good for probabilities<br>
+                        <strong>Tanh:</strong> Balanced output<br>
+                        <strong>Softmax:</strong> Best for multi-class classification</p>
+                    </div>
+                </div>
+                
+                <div class="explanation-card">
+                    <h3>📊 Training Metrics</h3>
+                    <div class="explanation-content">
+                        <h4>Training Loss</h4>
+                        <p>How wrong the AI is during training. Lower is better. Should decrease over time.</p>
+                        <h4>Validation Loss</h4>
+                        <p>Performance on unseen data. Shows if AI is actually learning or just memorizing.</p>
+                        <h4>Accuracy</h4>
+                        <p>Percentage of correct predictions. 95%+ means the AI is very good at its task.</p>
+                        <h4>Early Stopping</h4>
+                        <p>Stops training if no improvement prevents overfitting and saves time.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
         <div class="model-config">
             <div class="config-section">
                 <h3>Network Architecture (Memory Optimized)</h3>
@@ -117,6 +165,16 @@
                     <input type="file" id="dataFile" accept=".json">
                     <button id="loadDataBtn">Load Data</button>
                 </div>
+            </div>
+        </div>
+        
+        <div class="training-progress">
+            <h3>🔄 Training Progress</h3>
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="progress-text" id="progressText">Ready to train</div>
             </div>
         </div>
         

@@ -327,6 +327,7 @@ class AITrainer {
         this.currentEpoch = 0;
         this.trainingStartTime = null;
         this.chartManager = new ChartManager();
+        this.progressInterval = null;
         this.initializeEventListeners();
         this.log('AI Trainer initialized', 'info');
     }
@@ -488,6 +489,9 @@ class AITrainer {
         document.getElementById('trainBtn').disabled = true;
         document.getElementById('stopBtn').disabled = false;
         
+        // Start real-time progress updates
+        this.startProgressMonitoring(epochs);
+        
         let bestAccuracy = 0;
         let patienceCounter = 0;
         const maxPatience = 100;
@@ -538,6 +542,9 @@ class AITrainer {
         
         this.stopTraining();
         this.log(`✅ Training completed! Best accuracy: ${bestAccuracy.toFixed(2)}%`, 'success');
+        
+        // Stop progress monitoring
+        this.stopProgressMonitoring();
     }
 
     async trainEpoch(learningRate, batchSize) {
@@ -639,6 +646,9 @@ class AITrainer {
             
             this.log(`Training stopped. Duration: ${hours}h ${minutes % 60}m ${seconds % 60}s`, 'info');
         }
+        
+        // Update progress bar to show completion
+        this.updateProgressBar(100, 'Training completed');
     }
 
     testModel() {
@@ -757,6 +767,46 @@ class AITrainer {
         const metrics = this.calculateMetrics();
         document.getElementById('trainingLoss').textContent = metrics.loss.toFixed(4);
         document.getElementById('accuracy').textContent = metrics.accuracy.toFixed(2) + '%';
+    }
+
+    startProgressMonitoring(totalEpochs) {
+        // Update progress bar every second
+        this.progressInterval = setInterval(() => {
+            if (this.isTraining && this.currentEpoch > 0) {
+                const progress = (this.currentEpoch / totalEpochs) * 100;
+                const metrics = this.calculateMetrics();
+                
+                // Update progress bar
+                this.updateProgressBar(progress, `Epoch ${this.currentEpoch}/${totalEpochs} - Accuracy: ${metrics.accuracy.toFixed(1)}%`);
+                
+                // Log accuracy improvement every second
+                if (metrics.accuracy > 0) {
+                    console.log(`Current accuracy: ${metrics.accuracy.toFixed(2)}%`);
+                }
+            }
+        }, 1000); // Update every second
+    }
+
+    stopProgressMonitoring() {
+        if (this.progressInterval) {
+            clearInterval(this.progressInterval);
+            this.progressInterval = null;
+        }
+    }
+
+    updateProgressBar(percentage, text) {
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+        
+        progressFill.style.width = `${Math.min(percentage, 100)}%`;
+        progressText.textContent = text;
+        
+        // Change color based on progress
+        if (percentage >= 95) {
+            progressFill.style.background = 'linear-gradient(90deg, #38a169 0%, #48bb78 100%)';
+        } else if (percentage >= 50) {
+            progressFill.style.background = 'linear-gradient(90deg, #667eea 0%, #764ba2 100%)';
+        }
     }
 
     cleanupMemory() {
