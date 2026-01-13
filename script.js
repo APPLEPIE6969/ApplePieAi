@@ -248,6 +248,7 @@ class Dataset {
             { input: "tell me a joke", output: "Why don't scientists trust atoms? Because they make up everything!" }
         ];
         
+        console.log('getChatbot called with:', vocabSize, maxSeqLength);
         return this.processChatData(conversations, vocabSize, maxSeqLength);
     }
     
@@ -544,11 +545,13 @@ class AITrainer {
 
     loadDataset() {
         const datasetType = document.getElementById('datasetType').value;
+        console.log('Loading dataset type:', datasetType);
         
         switch (datasetType) {
             case 'chatbot':
                 const vocabSize = parseInt(document.getElementById('vocabSize').value || 1000);
                 const maxSeqLength = parseInt(document.getElementById('maxSeqLength').value || 20);
+                console.log('Chatbot params:', vocabSize, maxSeqLength);
                 this.dataset = Dataset.getChatbot(vocabSize, maxSeqLength);
                 this.log('📚 Loaded Simple Chatbot dataset', 'info');
                 break;
