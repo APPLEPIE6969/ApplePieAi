@@ -331,7 +331,8 @@ static sequenceToText(sequence, indexToWord) {
         .filter(index => index > 0) // Remove padding
         .map(index => indexToWord[index] || '<unk>')
         .join(' ');
-}
+
+    }
 }
 
 class ChartManager {
