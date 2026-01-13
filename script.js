@@ -233,7 +233,7 @@ class NeuralNetwork {
 }
 
 class Dataset {
-    static getChatbot() {
+    static getChatbot(vocabSize = 1000, maxSeqLength = 20) {
         // Simple Q&A chatbot dataset
         const conversations = [
             { input: "hello", output: "Hello! How can I help you today?" },
@@ -243,15 +243,15 @@ class Dataset {
             { input: "thank you", output: "You're welcome!" },
             { input: "help", output: "I'm here to help! Ask me anything." },
             { input: "what can you do", output: "I can chat with you and answer questions." },
-            { input: "how old are you", output: "I'm as old as the code that created me!" },
-            { input: "where are you from", output: "I exist in the digital world." },
+            { input: "how old are you", output: "I'm as old as code that created me!" },
+            { input: "where are you from", output: "I exist in digital world." },
             { input: "tell me a joke", output: "Why don't scientists trust atoms? Because they make up everything!" }
         ];
         
-        return this.processChatData(conversations);
+        return this.processChatData(conversations, vocabSize, maxSeqLength);
     }
     
-    static getConversation() {
+    static getConversation(vocabSize = 1000, maxSeqLength = 20) {
         // Extended conversation pairs
         const conversations = [
             { input: "hi there", output: "Hello! Nice to meet you." },
@@ -266,13 +266,10 @@ class Dataset {
             { input: "what time is it", output: "I don't have access to a clock, but time flies when you're having fun!" }
         ];
         
-        return this.processChatData(conversations);
+        return this.processChatData(conversations, vocabSize, maxSeqLength);
     }
     
-    static processChatData(conversations) {
-        const vocabSize = parseInt(document.getElementById('vocabSize')?.value || 1000);
-        const maxSeqLength = parseInt(document.getElementById('maxSeqLength')?.value || 20);
-        
+    static processChatData(conversations, vocabSize = 1000, maxSeqLength = 20) {
         // Build vocabulary
         const vocab = new Set();
         conversations.forEach(conv => {
@@ -329,12 +326,12 @@ class Dataset {
         return sequence;
     }
     
-    static sequenceToText(sequence, indexToWord) {
-        return sequence
-            .filter(index => index > 0) // Remove padding
-            .map(index => indexToWord[index] || '<unk>')
-            .join(' ');
-    }
+static sequenceToText(sequence, indexToWord) {
+    return sequence
+        .filter(index => index > 0) // Remove padding
+        .map(index => indexToWord[index] || '<unk>')
+        .join(' ');
+}
 }
 
 class ChartManager {
@@ -549,18 +546,22 @@ class AITrainer {
         
         switch (datasetType) {
             case 'chatbot':
-                this.dataset = Dataset.getChatbot();
+                const vocabSize = parseInt(document.getElementById('vocabSize').value || 1000);
+                const maxSeqLength = parseInt(document.getElementById('maxSeqLength').value || 20);
+                this.dataset = Dataset.getChatbot(vocabSize, maxSeqLength);
                 this.log('📚 Loaded Simple Chatbot dataset', 'info');
                 break;
             case 'conversation':
-                this.dataset = Dataset.getConversation();
+                const convVocabSize = parseInt(document.getElementById('vocabSize').value || 1000);
+                const convMaxSeqLength = parseInt(document.getElementById('maxSeqLength').value || 20);
+                this.dataset = Dataset.getConversation(convVocabSize, convMaxSeqLength);
                 this.log('📚 Loaded Conversation Pairs dataset', 'info');
                 break;
             case 'custom':
                 // Custom data will be loaded via file upload
                 break;
             default:
-                this.dataset = Dataset.getChatbot();
+                this.dataset = Dataset.getChatbot(1000, 20);
         }
         
         if (this.dataset && datasetType !== 'custom') {
